@@ -1,14 +1,11 @@
-package rrd
-//
 // This is go-bindings package for librrd
-//
+package rrd
 
-/*
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include "rrd.h"
-*/
+// #cgo pkg-config: librrd
+// #include <stdio.h>
+// #include <stdlib.h>
+// #include <string.h>
+// #include "rrd.h"
 import "C"
 
 import (
