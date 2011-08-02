@@ -1,7 +1,7 @@
 // This is go-bindings package for librrd
 package rrd
 
-// #cgo pkg-config: librrd
+// #cgo LDFLAGS: -lrrd_th
 // #include <stdio.h>
 // #include <stdlib.h>
 // #include <string.h>
@@ -9,10 +9,8 @@ package rrd
 import "C"
 
 import (
-    "os"
-    "unsafe"
-    // "fmt"
-    // "container/vector"
+	"os"
+	"unsafe"
 )
 
 // The Create function lets you set up new Round Robin Database (RRD) files.
@@ -36,17 +34,18 @@ import (
 // See http://oss.oetiker.ch/rrdtool/doc/rrdcreate.en.html for detauls.
 //
 func Create(filename string, step, start_time int64, values []string) (err os.Error) {
-    cfilename := C.CString(filename)
-    defer C.free(unsafe.Pointer(cfilename))
+	cfilename := C.CString(filename)
+	defer C.free(unsafe.Pointer(cfilename))
 
-    cvalues := makeCStringArray(values)
-    defer freeCStringArray(cvalues)
+	cvalues := makeCStringArray(values)
+	defer freeCStringArray(cvalues)
 
-    ret := C.rrd_create_r(cfilename, C.ulong(step), C.time_t(start_time),
-        C.int(len(values)), getCStringArrayPointer(cvalues))
+	clearError()
+	ret := C.rrd_create_r(cfilename, C.ulong(step), C.time_t(start_time),
+		C.int(len(values)), getCStringArrayPointer(cvalues))
 
-    if int(ret) != 0 { err = os.NewError(error()) }
-    return
+	if int(ret) != 0 { err = os.NewError(error()) }
+	return
 }
 
 // The Update function feeds new data values into an RRD. The data is time aligned
@@ -67,46 +66,47 @@ func Create(filename string, step, start_time int64, values []string) (err os.Er
 // See http://oss.oetiker.ch/rrdtool/doc/rrdupdate.en.html for detauls.
 //
 func Update(filename, template string, values []string) (err os.Error) {
-    cfilename := C.CString(filename)
-    defer C.free(unsafe.Pointer(cfilename))
+	cfilename := C.CString(filename)
+	defer C.free(unsafe.Pointer(cfilename))
 
-    ctemplate := C.CString(template)
-    defer C.free(unsafe.Pointer(ctemplate))
+	ctemplate := C.CString(template)
+	defer C.free(unsafe.Pointer(ctemplate))
 
-    cvalues := makeCStringArray(values)
-    defer freeCStringArray(cvalues)
+	cvalues := makeCStringArray(values)
+	defer freeCStringArray(cvalues)
 
-    ret := C.rrd_update_r(cfilename, ctemplate,
-        C.int(len(values)), getCStringArrayPointer(cvalues))
+	clearError()
+	ret := C.rrd_update_r(cfilename, ctemplate,
+		C.int(len(values)), getCStringArrayPointer(cvalues))
 
-    if int(ret) != 0 { err = os.NewError(error()) }
-    return
+	if int(ret) != 0 { err = os.NewError(error()) }
+	return
 }
 
 //----- Helper methods ---------------------------------------------------------
 
 func error() string {
-    return C.GoString(C.rrd_get_error())
+	return C.GoString(C.rrd_get_error())
 }
 
 func clearError() {
-    C.rrd_clear_error()
+	C.rrd_clear_error()
 }
 
 func makeCStringArray(values []string) (cvalues []*C.char) {
-    cvalues = make([]*C.char, len(values))
-    for i := range values {
-        cvalues[i] = C.CString(values[i])
-    }
-    return
+	cvalues = make([]*C.char, len(values))
+	for i := range values {
+		cvalues[i] = C.CString(values[i])
+	}
+	return
 }
 
 func freeCStringArray(cvalues []*C.char) {
-    for i := range cvalues {
-        C.free(unsafe.Pointer(cvalues[i]))
-    }
+	for i := range cvalues {
+		C.free(unsafe.Pointer(cvalues[i]))
+	}
 }
 
 func getCStringArrayPointer(cvalues []*C.char) **C.char {
-    return (**C.char)(unsafe.Pointer(&cvalues[0]))
+	return (**C.char)(unsafe.Pointer(&cvalues[0]))
 }
