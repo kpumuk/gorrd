@@ -44,7 +44,9 @@ func Create(filename string, step, start_time int64, values []string) (err os.Er
 	ret := C.rrd_create_r(cfilename, C.ulong(step), C.time_t(start_time),
 		C.int(len(values)), getCStringArrayPointer(cvalues))
 
-	if int(ret) != 0 { err = os.NewError(error()) }
+	if int(ret) != 0 {
+		err = os.NewError(error())
+	}
 	return
 }
 
@@ -79,7 +81,9 @@ func Update(filename, template string, values []string) (err os.Error) {
 	ret := C.rrd_update_r(cfilename, ctemplate,
 		C.int(len(values)), getCStringArrayPointer(cvalues))
 
-	if int(ret) != 0 { err = os.NewError(error()) }
+	if int(ret) != 0 {
+		err = os.NewError(error())
+	}
 	return
 }
 
