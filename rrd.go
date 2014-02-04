@@ -9,7 +9,8 @@ package rrd
 import "C"
 
 import (
-	"os"
+	"errors"
+	"time"
 	"unsafe"
 )
 
@@ -33,7 +34,7 @@ import (
 //
 // See http://oss.oetiker.ch/rrdtool/doc/rrdcreate.en.html for detauls.
 //
-func Create(filename string, step, start_time int64, values []string) (err os.Error) {
+func Create(filename string, step int, startTime time.Time, values []string) (err error) {
 	cfilename := C.CString(filename)
 	defer C.free(unsafe.Pointer(cfilename))
 
@@ -41,11 +42,11 @@ func Create(filename string, step, start_time int64, values []string) (err os.Er
 	defer freeCStringArray(cvalues)
 
 	clearError()
-	ret := C.rrd_create_r(cfilename, C.ulong(step), C.time_t(start_time),
+	ret := C.rrd_create_r(cfilename, C.ulong(step), C.time_t(startTime.Unix()),
 		C.int(len(values)), getCStringArrayPointer(cvalues))
 
 	if int(ret) != 0 {
-		err = os.NewError(error())
+		err = errors.New(error_())
 	}
 	return
 }
@@ -67,7 +68,7 @@ func Create(filename string, step, start_time int64, values []string) (err os.Er
 //
 // See http://oss.oetiker.ch/rrdtool/doc/rrdupdate.en.html for detauls.
 //
-func Update(filename, template string, values []string) (err os.Error) {
+func Update(filename, template string, values ...string) (err error) {
 	cfilename := C.CString(filename)
 	defer C.free(unsafe.Pointer(cfilename))
 
@@ -82,14 +83,14 @@ func Update(filename, template string, values []string) (err os.Error) {
 		C.int(len(values)), getCStringArrayPointer(cvalues))
 
 	if int(ret) != 0 {
-		err = os.NewError(error())
+		err = errors.New(error_())
 	}
 	return
 }
 
 //----- Helper methods ---------------------------------------------------------
 
-func error() string {
+func error_() string {
 	return C.GoString(C.rrd_get_error())
 }
 
